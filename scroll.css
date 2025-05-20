@@ -1,0 +1,9 @@
+/* scroll.css */
+
+.scrollable pre {
+  max-height: 500px;      /* adjust to taste */
+  overflow-y: auto;       /* vertical scroll */
+  border: 1px solid #ddd; /* optional styling */
+  padding: 0.5em;         /* optional padding */
+  background: #f8f8f8;    /* optional background */
+}

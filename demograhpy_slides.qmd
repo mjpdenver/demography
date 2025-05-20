@@ -1,0 +1,145 @@
+---
+title: "Demography Demo"
+author: "Matt Pocernich"
+format:
+    revealjs: 
+        toc: true           # turn on TOC
+        toc-location: left  # or "right", "top"
+        toc-depth: 3        # how many heading levels to include
+        css: scroll.css
+editor: visual
+execute:
+  echo: true
+  eval: false
+---
+
+## Programming Skills
+
+Where applicable, I use the following practices
+
+-   git/github - even when working alone.
+-   Continous integration
+-   JIRA/ Bugzilla/ Google doc for identifying, fixing and documenting bugs
+-   Code reuse/ functions/ occasionally packages
+
+## Data management
+
+Depending on the data source use on of the following methods
+
+-   Read in data using a appropriate functions
+-   For databases, create a connection, query using sql wrappers; read; disconnect
+-   Use API if data source provides a connection
+-   Test for expected properties
+-   Monitor continuously ingested data
+
+------------------------------------------------------------------------
+
+### Read/write Functions
+
+I favor functions from the tidyverse
+
+```{r, echo=TRUE, eval=FALSE}
+readr::read_csv()
+readr::write_csv()
+readxl::read_xlsx()
+writexl::write_xlsx()
+
+```
+
+------------------------------------------------------------------------
+
+### Database Connections
+
+::: scrollable
+```{r, echo=TRUE, eval=FALSE}
+
+
+# Connect to the .geodatabase file
+con <- dbConnect(SQLite(), "../data/ODC_CRIME_TRAFFICACCIDENTS5YR_P_6962891498747388240.geodatabase")
+
+# List available tables (feature classes)
+dbListTables(con)
+
+query <- "select top_traffic_accident_offense, count(*) as nn 
+from CRIME_TRAFFICACCIDENTS5YR_P
+group by top_traffic_accident_offense 
+order by nn desc"
+data <- dbGetQuery(con, query)
+print(data)
+
+dbGetQuery(con, "select min(reported_date), max(reported_date),
+            count(*) from CRIME_TRAFFICACCIDENTS5YR_P")
+
+dbDisconnect()
+
+```
+:::
+
+------------------------------------------------------------------------
+
+### Data manipulation
+
+When possible; dplyr
+
+::: scrollable
+```{r, echo=TRUE}
+# Read the data
+df <- read_csv(data_file, show_col_types = FALSE)
+
+# Filter for the selected county and year
+df_sub <- df %>%
+    filter(county == selected_county, year == selected_year) %>%
+    mutate(age = as.integer(age))
+
+# Determine bin breaks and labels
+max_age    <- max(df_sub$age, na.rm = TRUE)
+bin_breaks <- seq(0, ceiling((max_age + 1) / bin_width) * bin_width, by = bin_width)
+bin_labels <- paste0(bin_breaks[-length(bin_breaks)], "-", bin_breaks[-1] - 1)
+
+# Assign age groups
+df_binned <- df_sub %>%
+    mutate(age_group = cut(age,
+                           breaks = bin_breaks,
+                           right = FALSE,
+                           labels = bin_labels,
+                           include.lowest = TRUE))
+
+# Aggregate populations by age_group and gender
+df_pyr <- df_binned %>%
+    group_by(age_group) %>%
+    summarize(
+        male   = sum(malepopulation,   na.rm = TRUE),
+        female = sum(femalepopulation, na.rm = TRUE),
+        .groups = "drop"
+    ) %>%
+    # Convert male counts to negative for left side of pyramid
+    mutate(male = -male)
+```
+:::
+
+## Statistics
+
+Leverage the statistics community with R
+
+![Alt text for screen readers](Rlogo.png){width="150px"}
+
+### Favorite models
+
+-   GLM - often works, interpretability
+-   Random Forests, different types of data, variable importance, avoids overfitting, produces probabilities
+-   Python/ Scikit learn is pretty elegant.
+
+
+## Excel and Powerpoint
+
+-   Most data analysis is done in Excel
+-   Most presentations are created in Powerpoint
+-   I can work with these tools or create a hybrid workflow leveraging other tools like R, Python or SQL to meet clients or partners needs.
+
+## Visualization
+
+I favor ggplot and supplemental packages that add to it's capabilities
+
+When product is an html doc, plotly or ggplot are nice.
+
+Shiny, (Tableau, BI, Looker)
